@@ -2,25 +2,25 @@ mod letter;
 
 use std::{collections::HashMap, ops::Index};
 
-pub use self::letter::{Letter, LetterState};
+pub use self::letter::{Letter, LetterVisibility};
 
 #[derive(Debug, Clone, Copy)]
 pub struct Row {
     letters: [Letter; 5],
-    pub state: RowState,
+    visibility: RowVisibility,
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum RowState {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RowVisibility {
     Hidden,
     Revealed,
 }
 
 impl Row {
-    pub fn new(word: &str, state: RowState) -> Self {
-        let letter_state = match state {
-            RowState::Hidden => LetterState::Hidden,
-            RowState::Revealed => LetterState::RevealedCorrect,
+    pub(crate) fn new(word: &str, visibility: RowVisibility) -> Self {
+        let letter_state = match visibility {
+            RowVisibility::Hidden => LetterVisibility::Hidden,
+            RowVisibility::Revealed => LetterVisibility::RevealedCorrect,
         };
 
         Row {
@@ -31,11 +31,15 @@ impl Row {
                 .as_slice()
                 .try_into()
                 .unwrap(),
-            state,
+            visibility,
         }
     }
 
-    pub fn new_guess(guess: &str, target: &str) -> Self {
+    pub fn is_visible(&self) -> bool {
+        self.visibility == RowVisibility::Revealed
+    }
+
+    pub(crate) fn new_guess(guess: &str, target: &str) -> Self {
         // We make a big assumption in this function that both `guess` and
         // `target` are of the same length!
 
@@ -52,42 +56,46 @@ impl Row {
         let mut letters = guess
             .as_bytes()
             .iter()
-            .map(|&c| Letter::new(c as char, LetterState::RevealedIncorrect))
+            .map(|&c| Letter::new(c as char, LetterVisibility::RevealedIncorrect))
             .collect::<Vec<_>>();
 
         // First, mark every character that is already in the correct spot.
         for (idx, &target_c) in target_chars.iter().enumerate() {
             if target_c == guess_chars[idx] {
-                letters[idx].state = LetterState::RevealedCorrect;
+                letters[idx].set_visibility(LetterVisibility::RevealedCorrect);
                 *char_counts.get_mut(&(target_c as char)).unwrap() -= 1;
             }
         }
 
         // Then, for every other character, check if it's shifted or incorrect.
         for (idx, &guess_c) in guess_chars.iter().enumerate() {
+            let mut letter = letters[idx];
+
             // Skip the ones we've already marked as correct.
-            if let LetterState::RevealedCorrect = letters[idx].state {
+            if let LetterVisibility::RevealedCorrect = letter.visibility() {
                 continue;
             }
 
-            letters[idx].state = match char_counts.get_mut(&(guess_c as char)) {
-                None => LetterState::RevealedIncorrect,
+            let vis = match char_counts.get_mut(&(guess_c as char)) {
+                None => LetterVisibility::RevealedIncorrect,
                 Some(count) => {
                     if *count < 1 {
-                        LetterState::RevealedIncorrect
+                        LetterVisibility::RevealedIncorrect
                     } else {
                         *count -= 1;
-                        LetterState::RevealedShifted
+                        LetterVisibility::RevealedShifted
                     }
                 }
-            }
+            };
+
+            letter.set_visibility(vis);
         }
 
         let letters = letters.try_into().unwrap();
 
         Row {
             letters,
-            state: RowState::Revealed,
+            visibility: RowVisibility::Revealed,
         }
     }
 }

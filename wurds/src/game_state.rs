@@ -1,5 +1,5 @@
 use crate::{
-    row::{Row, RowState},
+    row::{Row, RowVisibility},
     MAX_GUESSES,
 };
 
@@ -20,7 +20,7 @@ pub struct GameState {
 impl GameState {
     pub fn new(word: String) -> Self {
         GameState {
-            rows: [Row::new(&word, RowState::Hidden); MAX_GUESSES],
+            rows: [Row::new(&word, RowVisibility::Hidden); MAX_GUESSES],
             word,
             cur_guess: 1,
             result: GameResult::InProgress,

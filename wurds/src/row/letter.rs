@@ -2,13 +2,28 @@ use std::fmt::Display;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Letter {
-    pub state: LetterState,
-    pub inner: char,
+    visibility: LetterVisibility,
+    inner: char,
 }
 
 impl Letter {
-    pub fn new(c: char, state: LetterState) -> Self {
-        Letter { state, inner: c }
+    pub fn new(c: char, visibility: LetterVisibility) -> Self {
+        Letter {
+            visibility,
+            inner: c,
+        }
+    }
+
+    pub fn visibility(&self) -> LetterVisibility {
+        self.visibility
+    }
+
+    pub(crate) fn set_visibility(&mut self, visibility: LetterVisibility) {
+        self.visibility = visibility;
+    }
+
+    pub fn inner(&self) -> char {
+        self.inner
     }
 }
 
@@ -18,8 +33,8 @@ impl Display for Letter {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-pub enum LetterState {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum LetterVisibility {
     Hidden,
     RevealedIncorrect,
     RevealedShifted,
