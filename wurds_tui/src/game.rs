@@ -49,10 +49,6 @@ impl<'a> Game<'a> {
         self.game_state.state()
     }
 
-    pub fn make_guess(&mut self, guess: &str) {
-        self.game_state.make_guess(guess);
-    }
-
     pub fn run(&mut self) -> Result<()> {
         let mut input = String::new();
         let mut status_line: Option<&'static str> = None;
@@ -99,7 +95,7 @@ impl<'a> Game<'a> {
             };
 
             if let InputValidationResult::Valid = validated {
-                self.make_guess(&input.to_lowercase());
+                self.game_state.make_guess(&input.to_lowercase());
             }
         }
 
