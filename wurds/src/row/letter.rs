@@ -1,11 +1,9 @@
 use std::fmt::Display;
 
-use crate::BLOCK_CHAR;
-
 #[derive(Debug, Clone, Copy)]
 pub struct Letter {
     pub state: LetterState,
-    inner: char,
+    pub inner: char,
 }
 
 impl Letter {
@@ -16,10 +14,7 @@ impl Letter {
 
 impl Display for Letter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self.state {
-            LetterState::Hidden => write!(f, "{}", BLOCK_CHAR),
-            _ => write!(f, "{}", self.inner),
-        }
+        write!(f, "{}", self.inner)
     }
 }
 

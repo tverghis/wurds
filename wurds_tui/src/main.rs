@@ -1,6 +1,3 @@
-mod game_state;
-mod row;
-
 use std::io::{Stdout, Write};
 
 use crossterm::{
@@ -8,12 +5,11 @@ use crossterm::{
     style::{self, style, Color, Stylize},
     terminal, ExecutableCommand, QueueableCommand, Result,
 };
-use game_state::{GameResult, GameState};
-use row::{LetterState, RowState};
-
-const BLOCK_CHAR: char = '\u{25A1}'; // "WHITE SQUARE"
-const MAX_GUESSES: usize = 6;
-const WORD_SIZE: usize = 5;
+use wurds::{
+    game_state::{GameResult, GameState},
+    row::{LetterState, RowState},
+    MAX_GUESSES, WORD_SIZE,
+};
 
 fn main() -> Result<()> {
     let mut stdout = std::io::stdout();
@@ -79,8 +75,14 @@ fn draw_board(game: &GameState, stdout: &mut Stdout) -> Result<()> {
                 },
             };
 
+            let letter = game.rows[row][col];
+            let letter_repr = match letter.state {
+                LetterState::Hidden => '\u{25A1}',
+                _ => letter.inner,
+            };
+
             stdout.queue(style::PrintStyledContent(
-                style(game.rows[row][col]).with(letter_color),
+                style(letter_repr).with(letter_color),
             ))?;
         }
     }
