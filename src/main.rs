@@ -20,11 +20,10 @@ fn main() -> Result<()> {
     let stdin = std::io::stdin();
     let mut input = String::new();
 
-    stdout.execute(terminal::Clear(terminal::ClearType::All))?;
-
     let mut game = GameState::new(String::from("hello"));
 
     while let GameResult::InProgress = game.result {
+        stdout.execute(terminal::Clear(terminal::ClearType::All))?;
         draw_board(&game, &mut stdout)?;
 
         stdout
@@ -73,6 +72,8 @@ fn draw_board(game: &GameState, stdout: &mut Stdout) -> Result<()> {
             ))?;
         }
     }
+
+    stdout.flush()?;
 
     Ok(())
 }
