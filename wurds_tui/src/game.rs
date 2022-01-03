@@ -9,7 +9,7 @@ use std::{
     io::{Stdin, Stdout, Write},
 };
 use wurds::{
-    game_state::{GameState, WurdGame},
+    game_state::{GameState, WurdsGame},
     row::LetterVisibility,
     MAX_GUESSES, WORD_SIZE,
 };
@@ -17,7 +17,7 @@ use wurds::{
 pub struct Game<'a> {
     dictionary: HashSet<&'a str>,
     target_word: &'a str,
-    game_state: WurdGame,
+    game_state: WurdsGame,
     stdin: Stdin,
     stdout: Stdout,
 }
@@ -31,7 +31,7 @@ impl<'a> Game<'a> {
         let mut dictionary = HashSet::with_capacity(num_words);
         dictionary.extend(dict.iter());
 
-        let game_state = WurdGame::new(target_word.into());
+        let game_state = WurdsGame::new(target_word.into());
 
         let stdin = std::io::stdin();
         let stdout = std::io::stdout();

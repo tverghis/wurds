@@ -10,16 +10,16 @@ pub enum GameState {
     InProgress,
 }
 
-pub struct WurdGame {
+pub struct WurdsGame {
     word: String,
     rows: [Row; MAX_GUESSES],
     cur_guess: usize,
     state: GameState,
 }
 
-impl WurdGame {
+impl WurdsGame {
     pub fn new(word: String) -> Self {
-        WurdGame {
+        WurdsGame {
             rows: [Row::new(&word, RowVisibility::Hidden); MAX_GUESSES],
             word,
             cur_guess: 1,
