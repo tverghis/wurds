@@ -1,6 +1,6 @@
 mod letter;
 
-use std::{collections::HashSet, ops::Index};
+use std::{collections::HashMap, ops::Index};
 
 pub use self::letter::{Letter, LetterState};
 
@@ -36,33 +36,33 @@ impl Row {
     }
 
     pub fn new_guess(guess: &str, target: &str) -> Self {
-        let target_chars = target.chars().collect::<HashSet<_>>();
+        let mut char_counts = HashMap::new();
+
+        for c in target.chars() {
+            let entry = char_counts.entry(c).or_insert(0u32);
+            *entry += 1;
+        }
 
         let letters = guess
             .chars()
             .zip(target.chars())
-            .map(|(g, t)| {
-                if g == t {
-                    return Letter::new(g, LetterState::RevealedCorrect);
-                }
+            .map(|(g, t)| match char_counts.get_mut(&g) {
+                None => Letter::new(g, LetterState::RevealedIncorrect),
+                Some(count) => {
+                    if *count < 1 {
+                        return Letter::new(g, LetterState::RevealedIncorrect);
+                    }
 
-                /*
-                 * FIXME:
-                 * If the `target` character has been previously revealed in the
-                 * correct position, we will incorrectly mark this occurence of
-                 * `target` as `RevealedShifted`.
-                 * For example, say that the word being guessed is "hello".
-                 * If the user enters a guess of `heels`, then the first `e`
-                 * will be marked as `RevealedCorrect`, but the second `e` will
-                 * be marked `RevealedShifted`. The second `e` should be marked
-                 * `RevealedIncorrect` instead, so as to not mislead the player
-                 * into thinking the word contains a second `e`.
-                 */
-                if target_chars.contains(&g) {
-                    return Letter::new(g, LetterState::RevealedShifted);
-                }
+                    let state = if t == g {
+                        LetterState::RevealedCorrect
+                    } else {
+                        LetterState::RevealedShifted
+                    };
 
-                Letter::new(g, LetterState::RevealedIncorrect)
+                    *count -= 1;
+
+                    Letter::new(g, state)
+                }
             })
             .collect::<Vec<_>>()
             .as_slice()
