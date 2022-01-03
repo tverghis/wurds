@@ -41,7 +41,7 @@ fn main() -> Result<()> {
         stdin.read_line(&mut input)?;
 
         let input = input.trim();
-        if input.len() != WORD_SIZE {
+        if !input_is_valid(input) {
             continue;
         }
 
@@ -51,6 +51,18 @@ fn main() -> Result<()> {
     }
 
     finish_game(&game, &mut stdout)
+}
+
+fn input_is_valid(input: &str) -> bool {
+    if input.len() != WORD_SIZE {
+        return false;
+    }
+
+    if input.matches(|c: char| !c.is_ascii_alphabetic()).count() > 0 {
+        return false;
+    }
+
+    true
 }
 
 fn draw_board(game: &GameState, stdout: &mut Stdout) -> Result<()> {
