@@ -69,7 +69,7 @@ impl Row {
 
         // Then, for every other character, check if it's shifted or incorrect.
         for (idx, &guess_c) in guess_chars.iter().enumerate() {
-            let mut letter = letters[idx];
+            let letter = &mut letters[idx];
 
             // Skip the ones we've already marked as correct.
             if let LetterVisibility::RevealedCorrect = letter.visibility() {
