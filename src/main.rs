@@ -12,7 +12,7 @@ use game_state::{GameResult, GameState};
 use row::{LetterState, RowState};
 
 const BLOCK_CHAR: char = '\u{25A1}'; // "WHITE SQUARE"
-const MAX_GUESSES: usize = 5;
+const MAX_GUESSES: usize = 6;
 const WORD_SIZE: usize = 5;
 
 fn main() -> Result<()> {
