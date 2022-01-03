@@ -4,26 +4,26 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Copy)]
-pub enum GameResult {
+pub enum GameState {
     Win,
     Loss,
     InProgress,
 }
 
-pub struct GameState {
+pub struct WurdGame {
     word: String,
     rows: [Row; MAX_GUESSES],
     cur_guess: usize,
-    result: GameResult,
+    state: GameState,
 }
 
-impl GameState {
+impl WurdGame {
     pub fn new(word: String) -> Self {
-        GameState {
+        WurdGame {
             rows: [Row::new(&word, RowVisibility::Hidden); MAX_GUESSES],
             word,
             cur_guess: 1,
-            result: GameResult::InProgress,
+            state: GameState::InProgress,
         }
     }
 
@@ -31,22 +31,22 @@ impl GameState {
         self.cur_guess
     }
 
-    pub fn result(&self) -> GameResult {
-        self.result
+    pub fn state(&self) -> GameState {
+        self.state
     }
 
     pub fn make_guess(&mut self, word: &str) {
         self.rows[self.cur_guess - 1] = Row::new_guess(word, &self.word);
 
         if word == self.word {
-            self.result = GameResult::Win;
+            self.state = GameState::Win;
             return;
         }
 
         self.cur_guess += 1;
 
         if self.cur_guess > MAX_GUESSES {
-            self.result = GameResult::Loss;
+            self.state = GameState::Loss;
         }
     }
 

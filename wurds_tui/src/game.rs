@@ -1,16 +1,15 @@
-use std::{
-    collections::HashSet,
-    io::{Stdin, Stdout, Write},
-};
-
 use crossterm::{
     cursor,
     style::{self, style, Color, Stylize},
     terminal, ExecutableCommand, QueueableCommand, Result,
 };
 use rand::Rng;
+use std::{
+    collections::HashSet,
+    io::{Stdin, Stdout, Write},
+};
 use wurds::{
-    game_state::{GameResult, GameState},
+    game_state::{GameState, WurdGame},
     row::LetterVisibility,
     MAX_GUESSES, WORD_SIZE,
 };
@@ -18,7 +17,7 @@ use wurds::{
 pub struct Game<'a> {
     dictionary: HashSet<&'a str>,
     target_word: &'a str,
-    game_state: GameState,
+    game_state: WurdGame,
     stdin: Stdin,
     stdout: Stdout,
 }
@@ -32,7 +31,7 @@ impl<'a> Game<'a> {
         let mut dictionary = HashSet::with_capacity(num_words);
         dictionary.extend(dict.iter());
 
-        let game_state = GameState::new(target_word.into());
+        let game_state = WurdGame::new(target_word.into());
 
         let stdin = std::io::stdin();
         let stdout = std::io::stdout();
@@ -46,8 +45,8 @@ impl<'a> Game<'a> {
         }
     }
 
-    fn state(&self) -> GameResult {
-        self.game_state.result()
+    fn state(&self) -> GameState {
+        self.game_state.state()
     }
 
     pub fn make_guess(&mut self, guess: &str) {
@@ -65,7 +64,7 @@ impl<'a> Game<'a> {
     pub fn run(&mut self) -> Result<()> {
         let mut input = String::new();
 
-        while let GameResult::InProgress = self.state() {
+        while let GameState::InProgress = self.state() {
             self.stdout
                 .execute(terminal::Clear(terminal::ClearType::All))?;
             self.draw_board()?;
@@ -141,7 +140,7 @@ impl<'a> Game<'a> {
         self.draw_board()?;
 
         let message = match self.state() {
-            GameResult::Win => style(format!(
+            GameState::Win => style(format!(
                 "Congratulations, you won! ({}/{})",
                 self.game_state.guess_count(),
                 MAX_GUESSES
