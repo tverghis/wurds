@@ -1,7 +1,7 @@
 use crossterm::{
     cursor,
     style::{self, style, Color, Stylize},
-    terminal, ExecutableCommand, QueueableCommand, Result,
+    terminal, QueueableCommand, Result,
 };
 use rand::Rng;
 use std::{
@@ -53,14 +53,19 @@ impl<'a> Game<'a> {
         let mut input = String::new();
         let mut status_line: Option<&'static str> = None;
 
-        while let GameState::InProgress = self.state() {
-            self.stdout
-                .execute(terminal::Clear(terminal::ClearType::All))?;
+        self.stdout
+            .queue(terminal::Clear(terminal::ClearType::All))?
+            .queue(cursor::SavePosition)?;
 
+        self.stdout.flush()?;
+
+        while let GameState::InProgress = self.state() {
             self.draw_board()?;
 
             self.stdout.queue(cursor::MoveToNextLine(2))?;
 
+            self.stdout
+                .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
             if let Some(status) = status_line {
                 self.stdout
                     .queue(style::PrintStyledContent(status.dark_grey()))?;
@@ -99,7 +104,10 @@ impl<'a> Game<'a> {
             }
         }
 
-        self.finish_game()
+        self.finish_game()?;
+        self.stdout.flush()?;
+
+        Ok(())
     }
 
     fn validate_input(&self, input: &str) -> InputValidationResult {
@@ -150,9 +158,7 @@ impl<'a> Game<'a> {
     }
 
     fn finish_game(&mut self) -> Result<()> {
-        self.stdout
-            .execute(terminal::Clear(terminal::ClearType::All))?;
-
+        self.stdout.queue(cursor::RestorePosition)?;
         self.draw_board()?;
 
         let message = match self.state() {
