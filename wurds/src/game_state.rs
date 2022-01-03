@@ -3,6 +3,7 @@ use crate::{
     MAX_GUESSES,
 };
 
+#[derive(Debug, Clone, Copy)]
 pub enum GameResult {
     Win,
     Loss,
