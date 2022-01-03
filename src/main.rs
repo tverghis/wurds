@@ -45,7 +45,7 @@ fn main() -> Result<()> {
             continue;
         }
 
-        game.guess(input);
+        game.guess(&input.to_lowercase());
 
         stdout.execute(cursor::RestorePosition)?;
     }
