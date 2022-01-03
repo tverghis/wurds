@@ -1,22 +1,39 @@
-use std::io::{Stdout, Write};
+mod game;
+
+use std::{
+    collections::HashSet,
+    io::{Stdout, Write},
+};
 
 use crossterm::{
     cursor,
     style::{self, style, Color, Stylize},
     terminal, ExecutableCommand, QueueableCommand, Result,
 };
+
+use rand::Rng;
+
 use wurds::{
     game_state::{GameResult, GameState},
     row::{LetterState, RowState},
     MAX_GUESSES, WORD_SIZE,
 };
 
+const DICTIONARY: &str = include_str!("../dict.txt");
+
 fn main() -> Result<()> {
     let mut stdout = std::io::stdout();
     let stdin = std::io::stdin();
     let mut input = String::new();
 
-    let mut game = GameState::new(String::from("hello"));
+    let dictionary = DICTIONARY.lines().collect::<Vec<_>>();
+    let mut dictionary_set = HashSet::<&str>::with_capacity(dictionary.len());
+    dictionary_set.extend(dictionary.iter());
+
+    let mut rng = rand::thread_rng();
+    let word = dictionary[rng.gen_range(0..dictionary.len())].into();
+
+    let mut game = GameState::new(word);
 
     while let GameResult::InProgress = game.result {
         stdout.execute(terminal::Clear(terminal::ClearType::All))?;
@@ -37,7 +54,7 @@ fn main() -> Result<()> {
         stdin.read_line(&mut input)?;
 
         let input = input.trim();
-        if !input_is_valid(input) {
+        if !input_is_valid(input, &dictionary_set) {
             continue;
         }
 
@@ -49,16 +66,12 @@ fn main() -> Result<()> {
     finish_game(&game, &mut stdout)
 }
 
-fn input_is_valid(input: &str) -> bool {
+fn input_is_valid(input: &str, dictionary: &HashSet<&str>) -> bool {
     if input.len() != WORD_SIZE {
         return false;
     }
 
-    if input.matches(|c: char| !c.is_ascii_alphabetic()).count() > 0 {
-        return false;
-    }
-
-    true
+    dictionary.contains(input)
 }
 
 fn draw_board(game: &GameState, stdout: &mut Stdout) -> Result<()> {
@@ -101,7 +114,7 @@ fn finish_game(game: &GameState, stdout: &mut Stdout) -> Result<()> {
             game.cur_guess, MAX_GUESSES
         ))
         .with(Color::Green),
-        _ => style(String::from("You lost!")).with(Color::Red),
+        _ => style(format!("You lost! The word was `{}`.", game.word)).with(Color::Red),
     };
 
     stdout

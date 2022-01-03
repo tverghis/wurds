@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 crossterm = "0.22.1"
+rand = "0.8.4"
 wurds = { path = "../wurds" }
