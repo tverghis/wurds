@@ -53,25 +53,25 @@ impl<'a> Game<'a> {
         self.game_state.make_guess(guess);
     }
 
-    pub fn validate_input(&self, input: &str) -> bool {
-        if input.len() != 5 {
-            return false;
-        }
-
-        self.dictionary.contains(input)
-    }
-
     pub fn run(&mut self) -> Result<()> {
         let mut input = String::new();
+        let mut status_line: Option<&'static str> = None;
 
         while let GameState::InProgress = self.state() {
             self.stdout
                 .execute(terminal::Clear(terminal::ClearType::All))?;
+
             self.draw_board()?;
 
+            self.stdout.queue(cursor::MoveToNextLine(2))?;
+
+            if let Some(status) = status_line {
+                self.stdout
+                    .queue(style::PrintStyledContent(status.dark_grey()))?;
+            }
+            self.stdout.queue(cursor::MoveToNextLine(1))?;
+
             self.stdout
-                .queue(cursor::MoveToNextLine(2))?
-                .queue(cursor::SavePosition)?
                 .queue(style::PrintStyledContent(
                     format!(
                         "Guess ({}/{}): ",
@@ -89,16 +89,33 @@ impl<'a> Game<'a> {
             self.stdin.read_line(&mut input)?;
 
             let input = input.trim();
-            if !self.validate_input(input) {
-                continue;
+
+            let validated = self.validate_input(input);
+
+            status_line = match validated {
+                InputValidationResult::Valid => None,
+                InputValidationResult::IncorrectLength => Some("Try guessing a five-letter word!"),
+                InputValidationResult::Unrecognized => Some("Didn't recognize that word!"),
+            };
+
+            if let InputValidationResult::Valid = validated {
+                self.make_guess(&input.to_lowercase());
             }
-
-            self.make_guess(&input.to_lowercase());
-
-            self.stdout.execute(cursor::RestorePosition)?;
         }
 
         self.finish_game()
+    }
+
+    fn validate_input(&self, input: &str) -> InputValidationResult {
+        if input.len() != 5 {
+            return InputValidationResult::IncorrectLength;
+        }
+
+        if self.dictionary.contains(input) {
+            InputValidationResult::Valid
+        } else {
+            InputValidationResult::Unrecognized
+        }
     }
 
     fn draw_board(&mut self) -> Result<()> {
@@ -137,6 +154,9 @@ impl<'a> Game<'a> {
     }
 
     fn finish_game(&mut self) -> Result<()> {
+        self.stdout
+            .execute(terminal::Clear(terminal::ClearType::All))?;
+
         self.draw_board()?;
 
         let message = match self.state() {
@@ -157,4 +177,11 @@ impl<'a> Game<'a> {
 
         Ok(())
     }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum InputValidationResult {
+    Valid,
+    IncorrectLength,
+    Unrecognized,
 }
