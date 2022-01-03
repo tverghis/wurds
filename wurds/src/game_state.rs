@@ -11,10 +11,10 @@ pub enum GameResult {
 }
 
 pub struct GameState {
-    pub word: String,
-    pub rows: [Row; MAX_GUESSES],
-    pub cur_guess: usize,
-    pub result: GameResult,
+    word: String,
+    rows: [Row; MAX_GUESSES],
+    cur_guess: usize,
+    result: GameResult,
 }
 
 impl GameState {
@@ -27,7 +27,15 @@ impl GameState {
         }
     }
 
-    pub fn guess(&mut self, word: &str) {
+    pub fn guess_count(&self) -> usize {
+        self.cur_guess
+    }
+
+    pub fn result(&self) -> GameResult {
+        self.result
+    }
+
+    pub fn make_guess(&mut self, word: &str) {
         self.rows[self.cur_guess - 1] = Row::new_guess(word, &self.word);
 
         if word == self.word {
@@ -40,5 +48,9 @@ impl GameState {
         if self.cur_guess > MAX_GUESSES {
             self.result = GameResult::Loss;
         }
+    }
+
+    pub fn row(&self, n: usize) -> &Row {
+        &self.rows[n]
     }
 }
