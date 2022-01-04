@@ -1,5 +1,5 @@
-pub mod game_state;
 pub mod row;
+pub mod wurds_game;
 
 /// The maximum number of guesses afforded to the user.
 pub const MAX_GUESSES: usize = 6;

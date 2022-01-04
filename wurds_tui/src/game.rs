@@ -11,8 +11,8 @@ use std::{
     io::{Stdin, Stdout, Write},
 };
 use wurds::{
-    game_state::{GameState, WurdsGame},
     row::LetterVisibility,
+    wurds_game::{GameState, WurdsGame},
     MAX_GUESSES, WORD_SIZE,
 };
 
