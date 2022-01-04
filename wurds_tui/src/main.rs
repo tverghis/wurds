@@ -1,11 +1,14 @@
 mod game;
+mod game_opts;
 
+use clap::Parser;
 use game::Game;
+use game_opts::{GameArgs, GameOpts};
 
 const DICTIONARY: &str = include_str!("../dict.txt");
 
-fn main() {
-    let dictionary = DICTIONARY.lines().collect::<Vec<_>>();
+fn main() -> anyhow::Result<()> {
+    let args = GameArgs::parse();
 
-    Game::new(&dictionary).run().unwrap();
+    Game::new(GameOpts::from_args(args)?).run()
 }

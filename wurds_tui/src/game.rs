@@ -1,7 +1,9 @@
+use crate::game_opts::GameOpts;
+use anyhow::Result;
 use crossterm::{
     cursor,
     style::{self, style, Color, Stylize},
-    terminal, QueueableCommand, Result,
+    terminal, QueueableCommand,
 };
 use rand::Rng;
 use std::{
@@ -14,24 +16,28 @@ use wurds::{
     MAX_GUESSES, WORD_SIZE,
 };
 
-pub struct Game<'a> {
-    dictionary: HashSet<&'a str>,
-    target_word: &'a str,
+pub struct Game {
+    dictionary: HashSet<String>,
+    target_word: String,
     game_state: WurdsGame,
     stdin: Stdin,
     stdout: Stdout,
+    opts: GameOpts,
 }
 
-impl<'a> Game<'a> {
-    pub fn new(dict: &[&'a str]) -> Self {
-        let mut rng = rand::thread_rng();
+impl Game {
+    pub fn new(opts: GameOpts) -> Self {
+        let dict = &opts.dictionary;
         let num_words = dict.len();
-        let target_word = dict[rng.gen_range(0..num_words)];
 
-        let mut dictionary = HashSet::with_capacity(num_words);
-        dictionary.extend(dict.iter());
+        let target_word = opts.forced_word.as_ref().cloned().unwrap_or_else(|| {
+            let mut rng = rand::thread_rng();
+            dict[rng.gen_range(0..num_words)].clone()
+        });
 
-        let game_state = WurdsGame::new(target_word.into());
+        let dictionary = dict.iter().map(Into::into).collect();
+
+        let game_state = WurdsGame::new(target_word.clone());
 
         let stdin = std::io::stdin();
         let stdout = std::io::stdout();
@@ -42,6 +48,7 @@ impl<'a> Game<'a> {
             game_state,
             stdin,
             stdout,
+            opts,
         }
     }
 
@@ -111,8 +118,12 @@ impl<'a> Game<'a> {
     }
 
     fn validate_input(&self, input: &str) -> InputValidationResult {
-        if input.len() != 5 {
+        if input.len() != WORD_SIZE {
             return InputValidationResult::IncorrectLength;
+        }
+
+        if self.opts.free_input {
+            return InputValidationResult::Valid;
         }
 
         if self.dictionary.contains(input) {
