@@ -4,19 +4,26 @@ use std::{collections::HashMap, ops::Index};
 
 pub use self::letter::{Letter, LetterVisibility};
 
+/// Models a (five-long) list of [Letter]s comprising a word that
+/// the user has guessed.
 #[derive(Debug, Clone, Copy)]
 pub struct Row {
     letters: [Letter; 5],
     visibility: RowVisibility,
 }
 
+/// Possible visibility states of a [Row].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RowVisibility {
+    /// Row contents are hidden.
     Hidden,
+    /// Row contents are revealed.
     Revealed,
 }
 
 impl Row {
+    /// Create a new Row, containing the given word. The Row may be created as
+    /// hidden or revealed.
     pub(crate) fn new(word: &str, visibility: RowVisibility) -> Self {
         let letter_state = match visibility {
             RowVisibility::Hidden => LetterVisibility::Hidden,
@@ -35,10 +42,15 @@ impl Row {
         }
     }
 
+    /// Returns whether the Row's contents are hidden or revealed.
     pub fn is_visible(&self) -> bool {
         self.visibility == RowVisibility::Revealed
     }
 
+    /// Create a new row, `guess`ing against the `target` word.
+    ///
+    /// The [Letter]s in this row are marked as being correct or incorrect.
+    /// The Row itself is created as revealed.
     pub(crate) fn new_guess(guess: &str, target: &str) -> Self {
         // We make a big assumption in this function that both `guess` and
         // `target` are of the same length!
