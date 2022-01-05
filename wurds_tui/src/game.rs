@@ -194,32 +194,16 @@ impl Game {
     }
 
     fn draw_letter(&mut self, letter: char, visibility: &LetterVisibility) -> Result<()> {
-        match visibility {
-            LetterVisibility::Hidden => {
-                self.stdout
-                    .queue(style::PrintStyledContent(
-                        (String::from(letter) + " ")
-                            .white()))?;
-            },
-            LetterVisibility::RevealedIncorrect => {
-                self.stdout
-                    .queue(style::PrintStyledContent(
-                        (String::from(letter) + " ")
-                            .dark_grey()))?;
-            },
-            LetterVisibility::RevealedShifted => {
-                self.stdout
-                    .queue(style::PrintStyledContent(
-                        (String::from(letter) + " ")
-                            .yellow()))?;
-            },
-            LetterVisibility::RevealedCorrect=> {
-                self.stdout
-                    .queue(style::PrintStyledContent(
-                        (String::from(letter) + " ")
-                            .green()))?;
-            },
+        let color = match visibility {
+            LetterVisibility::Hidden => Color::White,
+            LetterVisibility::RevealedIncorrect => Color::DarkGrey,
+            LetterVisibility::RevealedShifted => Color::Yellow,
+            LetterVisibility::RevealedCorrect=> Color::Green,
         };
+        
+        self.stdout.queue(style::PrintStyledContent(
+            style(format!("{} ", letter)).with(color),
+        ))?;
         Ok(())
     }
     fn draw_letterstate(&mut self) -> Result<()> {
