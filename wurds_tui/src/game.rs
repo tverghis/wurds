@@ -7,7 +7,7 @@ use crossterm::{
 };
 use rand::Rng;
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     io::{Stdin, Stdout, Write},
 };
 use wurds::{
@@ -78,6 +78,8 @@ impl Game {
                     .queue(style::PrintStyledContent(status.dark_grey()))?;
             }
             self.stdout.queue(cursor::MoveToNextLine(1))?;
+
+            self.draw_letterstate()?;
 
             self.stdout
                 .queue(style::PrintStyledContent(
@@ -187,6 +189,67 @@ impl Game {
             .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?
             .queue(style::PrintStyledContent(message))?
             .queue(cursor::MoveToNextLine(1))?;
+
+        Ok(())
+    }
+
+    fn draw_letter(&mut self, letter: char, visibility: &LetterVisibility) -> Result<()> {
+        match visibility {
+            LetterVisibility::Hidden => {
+                self.stdout
+                    .queue(style::PrintStyledContent(
+                        (String::from(letter) + " ")
+                            .white()))?;
+            },
+            LetterVisibility::RevealedIncorrect => {
+                self.stdout
+                    .queue(style::PrintStyledContent(
+                        (String::from(letter) + " ")
+                            .dark_grey()))?;
+            },
+            LetterVisibility::RevealedShifted => {
+                self.stdout
+                    .queue(style::PrintStyledContent(
+                        (String::from(letter) + " ")
+                            .yellow()))?;
+            },
+            LetterVisibility::RevealedCorrect=> {
+                self.stdout
+                    .queue(style::PrintStyledContent(
+                        (String::from(letter) + " ")
+                            .green()))?;
+            },
+        };
+        Ok(())
+    }
+    fn draw_letterstate(&mut self) -> Result<()> {
+        let letters_guessed = self.game_state.rows().iter()
+            .filter(|row| {
+                row.is_visible()
+            })
+            .flat_map(|row| {
+                row.iter().collect::<Vec<_>>()
+            })
+            .fold(HashMap::new(), |mut acc, letter| {
+                acc.entry(letter.inner())
+                    .and_modify(|visibility| *visibility = std::cmp::max(*visibility, letter.visibility()))
+                    .or_insert(letter.visibility());
+                acc
+            });
+
+        self.stdout
+            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
+        for c in (b'a'..=b'm').map(char::from) {
+            self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
+        }
+        self.stdout.queue(cursor::MoveToNextLine(1))?;
+
+        self.stdout
+            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
+        for c in (b'n'..=b'z').map(char::from) {
+            self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
+        }
+        self.stdout.queue(cursor::MoveToNextLine(1))?;
 
         Ok(())
     }

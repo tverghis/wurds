@@ -42,7 +42,7 @@ impl Display for Letter {
 }
 
 /// Represents the various states that a Letter can be in.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum LetterVisibility {
     /// The letter is hidden entirely
     Hidden,

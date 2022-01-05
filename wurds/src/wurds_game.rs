@@ -1,4 +1,5 @@
 use crate::{
+    row::letter::LetterVisibility,
     row::{Row, RowVisibility},
     MAX_GUESSES,
 };
@@ -68,5 +69,8 @@ impl WurdsGame {
     /// Panics if `n` is out of bounds.
     pub fn row(&self, n: usize) -> &Row {
         &self.rows[n]
+    }
+    pub fn rows(&self) -> &[Row; MAX_GUESSES] {
+        &self.rows
     }
 }
