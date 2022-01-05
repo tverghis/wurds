@@ -221,19 +221,15 @@ impl Game {
                 acc
             });
 
-        self.stdout
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
-        for c in (b'a'..=b'm').map(char::from) {
-            self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
+        for (start, end) in [(b'a', b'm'), (b'n', b'z')] {
+            self.stdout
+                .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
+            for c in (start..=end).map(char::from) {
+                self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
+            }
+            self.stdout.queue(cursor::MoveToNextLine(1))?;
         }
-        self.stdout.queue(cursor::MoveToNextLine(1))?;
 
-        self.stdout
-            .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
-        for c in (b'n'..=b'z').map(char::from) {
-            self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
-        }
-        self.stdout.queue(cursor::MoveToNextLine(1))?;
 
         Ok(())
     }
