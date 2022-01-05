@@ -198,26 +198,27 @@ impl Game {
             LetterVisibility::Hidden => Color::White,
             LetterVisibility::RevealedIncorrect => Color::DarkGrey,
             LetterVisibility::RevealedShifted => Color::Yellow,
-            LetterVisibility::RevealedCorrect=> Color::Green,
+            LetterVisibility::RevealedCorrect => Color::Green,
         };
-        
+
         self.stdout.queue(style::PrintStyledContent(
             style(format!("{} ", letter)).with(color),
         ))?;
         Ok(())
     }
     fn draw_letterstate(&mut self) -> Result<()> {
-        let letters_guessed = self.game_state.rows().iter()
-            .filter(|row| {
-                row.is_visible()
-            })
-            .flat_map(|row| {
-                row.iter().collect::<Vec<_>>()
-            })
+        let letters_guessed = self
+            .game_state
+            .rows()
+            .iter()
+            .filter(|row| row.is_visible())
+            .flat_map(|row| row.iter().collect::<Vec<_>>())
             .fold(HashMap::new(), |mut acc, letter| {
                 acc.entry(letter.inner())
-                    .and_modify(|visibility| *visibility = std::cmp::max(*visibility, letter.visibility()))
-                    .or_insert(letter.visibility());
+                    .and_modify(|visibility| {
+                        *visibility = std::cmp::max(*visibility, letter.visibility())
+                    })
+                    .or_insert_with(|| letter.visibility());
                 acc
             });
 
@@ -225,11 +226,13 @@ impl Game {
             self.stdout
                 .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
             for c in (start..=end).map(char::from) {
-                self.draw_letter(c, letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden))?;
+                self.draw_letter(
+                    c,
+                    letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden),
+                )?;
             }
             self.stdout.queue(cursor::MoveToNextLine(1))?;
         }
-
 
         Ok(())
     }

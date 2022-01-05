@@ -1,5 +1,4 @@
 use crate::{
-    row::letter::LetterVisibility,
     row::{Row, RowVisibility},
     MAX_GUESSES,
 };

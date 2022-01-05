@@ -1,4 +1,4 @@
-pub mod letter;
+mod letter;
 
 use std::{collections::HashMap, ops::Index};
 
@@ -148,8 +148,7 @@ impl<'a> Iterator for RowIterator<'a> {
             let l = self.row[self.index];
             self.index += 1;
             Some(l)
-        }
-        else {
+        } else {
             None
         }
     }
