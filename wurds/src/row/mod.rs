@@ -110,6 +110,13 @@ impl Row {
             visibility: RowVisibility::Revealed,
         }
     }
+
+    pub fn iter(&self) -> RowIterator {
+        RowIterator {
+            row: self,
+            index: 0,
+        }
+    }
 }
 
 impl Index<usize> for Row {
@@ -125,5 +132,24 @@ impl Index<usize> for Row {
         }
 
         &self.letters[n]
+    }
+}
+
+pub struct RowIterator<'a> {
+    row: &'a Row,
+    index: usize,
+}
+
+impl<'a> Iterator for RowIterator<'a> {
+    type Item = Letter;
+
+    fn next(&mut self) -> Option<Letter> {
+        if self.index < 5 {
+            let l = self.row[self.index];
+            self.index += 1;
+            Some(l)
+        } else {
+            None
+        }
     }
 }

@@ -7,7 +7,7 @@ use crossterm::{
 };
 use rand::Rng;
 use std::{
-    collections::HashSet,
+    collections::{HashMap, HashSet},
     io::{Stdin, Stdout, Write},
 };
 use wurds::{
@@ -78,6 +78,8 @@ impl Game {
                     .queue(style::PrintStyledContent(status.dark_grey()))?;
             }
             self.stdout.queue(cursor::MoveToNextLine(1))?;
+
+            self.draw_letterstate()?;
 
             self.stdout
                 .queue(style::PrintStyledContent(
@@ -187,6 +189,50 @@ impl Game {
             .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?
             .queue(style::PrintStyledContent(message))?
             .queue(cursor::MoveToNextLine(1))?;
+
+        Ok(())
+    }
+
+    fn draw_letter(&mut self, letter: char, visibility: &LetterVisibility) -> Result<()> {
+        let color = match visibility {
+            LetterVisibility::Hidden => Color::White,
+            LetterVisibility::RevealedIncorrect => Color::DarkGrey,
+            LetterVisibility::RevealedShifted => Color::Yellow,
+            LetterVisibility::RevealedCorrect => Color::Green,
+        };
+
+        self.stdout.queue(style::PrintStyledContent(
+            style(format!("{} ", letter)).with(color),
+        ))?;
+        Ok(())
+    }
+    fn draw_letterstate(&mut self) -> Result<()> {
+        let letters_guessed = self
+            .game_state
+            .rows()
+            .iter()
+            .filter(|row| row.is_visible())
+            .flat_map(|row| row.iter().collect::<Vec<_>>())
+            .fold(HashMap::new(), |mut acc, letter| {
+                acc.entry(letter.inner())
+                    .and_modify(|visibility| {
+                        *visibility = std::cmp::max(*visibility, letter.visibility())
+                    })
+                    .or_insert_with(|| letter.visibility());
+                acc
+            });
+
+        for (start, end) in [(b'a', b'm'), (b'n', b'z')] {
+            self.stdout
+                .queue(terminal::Clear(terminal::ClearType::CurrentLine))?;
+            for c in (start..=end).map(char::from) {
+                self.draw_letter(
+                    c,
+                    letters_guessed.get(&c).unwrap_or(&LetterVisibility::Hidden),
+                )?;
+            }
+            self.stdout.queue(cursor::MoveToNextLine(1))?;
+        }
 
         Ok(())
     }

@@ -69,4 +69,7 @@ impl WurdsGame {
     pub fn row(&self, n: usize) -> &Row {
         &self.rows[n]
     }
+    pub fn rows(&self) -> &[Row; MAX_GUESSES] {
+        &self.rows
+    }
 }
